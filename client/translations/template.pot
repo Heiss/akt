@@ -1,0 +1,34 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: easygettext\n"
+"Project-Id-Version: \n"
+
+#: /home/physicx/projects/akt/client/src/components/ThemeSelector.vue:34
+msgid "Enable DarkMode?"
+msgstr ""
+
+#: /home/physicx/projects/akt/client/src/App.vue:110
+msgid "item"
+msgstr ""
+
+#: /home/physicx/projects/akt/client/src/components/LanguageSelector.vue:29
+msgid "Select language"
+msgstr ""
+
+#: /home/physicx/projects/akt/client/src/router/index.js:22
+msgid "Settings"
+msgstr ""
+
+#: /home/physicx/projects/akt/client/src/components/LanguageSelector.vue:2
+msgid "Settings for language"
+msgstr ""
+
+#: /home/physicx/projects/akt/client/src/components/ThemeSelector.vue:2
+msgid "Settings for theme"
+msgstr ""
+
+#: /home/physicx/projects/akt/client/src/components/ThemeSelector.vue:28
+msgid "Using DeviceMode?"
+msgstr ""
