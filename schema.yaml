@@ -1,81 +1,43 @@
-- public_url: http://akt.local
-  services:
-    - servicename: zenodo
-      client_id: ABC
-      client_secret: XYZ
-      openapi: http://zenodo.org/openapi
-      api_url: http://zenodo.org/api
-      authenticate_url: http://zenodo.org/oauth/auth
-      refresh_url: http://zenodo.org/oauth/token
-    - servicename: openscienceframework
-      client_id: AABC
-      client_secret: XXYZ
-      api_url: http://osf.org/api/v3
-      authenticate_url: http://osf.org/oauth/authorize
-      refresh_url: http://osf.org/oauth/token
-      scope:
-        - users
-        - projects
-  datapoints:
-    - service:
-        - name: zenodo
-          endpoints:
-            - endpoint: /depositions
-              name: listDepositions
-              field: [data, depositions]
-            - endpoint: /depositions/<[idDepo]>
-              name: setDeposition
-              method: PUT
-              schema: >
-                {
-                  "$schema": "http://json-schema.org/schema#",
-                  "Title": "Deposition",
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type":"integer",
-                      "minimum": 0
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "title": {
-                          "type": "string"
-                        },
-                        "description":{
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              data: >
-                {
-                  "id": <[idZenodo]>,
-                  "data": {
-                    "title": "<[title]>",
-                    "description": "<[description]>"
-                  }
-                }
-    - service:
-      name: openscienceframework
-      endpoints:
-        - endpoints: /projects
-          name: listProjects
-          field: [projects]
-          schema: >
-            {
-              "$schema": "http://json-schema.org/schema#",
-              "Title": "Projects",
-              "type": "object",
-              "properties": {
-                "projects": {
-                  "type": "object",
-                  "properties": {
-                  "id": {
-                    "type":"integer",
-                    "minimum": 0
-                  },
+public_url: http://akt.local
+services:
+  - servicename: zenodo
+    client_id: ABC
+    client_secret: XYZ
+    openapi: http://zenodo.org/openapi
+    api_url: http://zenodo.org/api
+    authenticate_url: http://zenodo.org/oauth/auth
+    refresh_url: http://zenodo.org/oauth/token
+  - servicename: openscienceframework
+    client_id: AABC
+    client_secret: XXYZ
+    api_url: http://osf.org/api/v3
+    authenticate_url: http://osf.org/oauth/authorize
+    refresh_url: http://osf.org/oauth/token
+    scope:
+      - users
+      - projects
+datapoints:
+  - name: zenodo
+    endpoints:
+      - endpoint: /depositions
+        name: listDepositions
+        field: [data, depositions]
+      - endpoint: /depositions/<[idDepo]>
+        name: setDeposition
+        method: PUT
+        schema: >
+          {
+            "$schema": "http://json-schema.org/schema#",
+            "Title": "Deposition",
+            "type": "object",
+            "properties": {
+              "id": {
+                "type":"integer",
+                "minimum": 0
+              },
+              "data": {
+                "type": "object",
+                "properties": {
                   "title": {
                     "type": "string"
                   },
@@ -85,9 +47,46 @@
                 }
               }
             }
+          }
+        data: >
+          {
+            "id": <[idZenodo]>,
+            "data": {
+              "title": "<[title]>",
+              "description": "<[description]>"
+            }
+          }
+  - name: openscienceframework
+    endpoints:
+      - endpoints: /projects
+        fields:
+          - name: listProjects
+            field: [projects]
+        schema: >
+          {
+            "$schema": "http://json-schema.org/schema#",
+            "Title": "Projects",
+            "type": "object",
+            "properties": {
+              "projects": {
+                "type": "object",
+                "properties": {
+                "id": {
+                  "type":"integer",
+                  "minimum": 0
+                },
+                "title": {
+                  "type": "string"
+                },
+                "description":{
+                  "type": "string"
+                }
+              }
+            }
+          }
       - endpoints: /projects
         name: setProject
-        schema: > 
+        schema: >
           {
             "$schema": "http://json-schema.org/schema#",
             "Title": "Project",
@@ -117,55 +116,55 @@
               "description": "<[description]>"
             }
           }
-  endpoints:
-    - endpoint: /list
-      merge:
-        - datapoints:
-            - listProjects
-            - listDepositions
-          name: lists
-      schema: >
-        {
-          userDepositions: <[lists]>
-        }
-    - endpoint: /list
-      method: PUT
-      connect:
-        - setDeposition
-        - setProject
-      schema: >
-        {
-          "$schema": "http://json-schema.org/schema#",
-          "Title": "Deposition",
-          "type": "object",
-          "properties": {
-            "idZenodo": {
-              "type":"integer",
-              "minimum": 0
-            },
-            "idProject": {
-              "type":"integer",
-              "minimum": 0
-            },
-            "data":{
-              "type":"object",
-              "properties":{
-                "title": {
-                  "type": "string"
-                },
-                "description":{
-                  "type": "string"
-                }
+endpoints:
+  - endpoint: /list
+    merge:
+      - datapoints:
+          - listProjects
+          - listDepositions
+        name: lists
+    schema: >
+      {
+        userDepositions: <[lists]>
+      }
+  - endpoint: /list
+    method: PUT
+    connect:
+      - setDeposition
+      - setProject
+    schema: >
+      {
+        "$schema": "http://json-schema.org/schema#",
+        "Title": "Deposition",
+        "type": "object",
+        "properties": {
+          "idZenodo": {
+            "type":"integer",
+            "minimum": 0
+          },
+          "idProject": {
+            "type":"integer",
+            "minimum": 0
+          },
+          "data":{
+            "type":"object",
+            "properties":{
+              "title": {
+                "type": "string"
+              },
+              "description":{
+                "type": "string"
               }
             }
           }
         }
-      fields:
-        - name: idDepo
-          field: [idZenodo]
-        - name: idProj
-          field: [idProject]
-        - name: title
-          field: [data, title]
-        - name: description
-          field: [data, "description"]
+      }
+    fields:
+      - name: idDepo
+        field: [idZenodo]
+      - name: idProj
+        field: [idProject]
+      - name: title
+        field: [data, title]
+      - name: description
+        field: [data, "description"]
