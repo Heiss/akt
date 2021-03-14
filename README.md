@@ -1,24 +1,25 @@
-# Api Key Tresor (short AKT)
+# Api-Key Tresor (short AKT)
 
-## Project setup
-```
-npm install
-```
+This project is a proof-of-concept. 
+`Schema.yaml` holds an example file for AKT.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+## Load configuration
 
-### Compiles and minifies for production
-```
-npm run build
+Service needs an schema yaml file, which holds the configuration.
+
+File-based
+```bash
+akt --file schema.yaml
 ```
 
-### Lints and fixes files
-```
-npm run lint
+URL-based
+```bash
+akt --url https://localhost/schema.yaml
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+Environment-Variable-based for URL-based approach
+```bash
+akt --env-var AKT_SCHEMA_URL
+```
+
+AKT loads the schema from given value in env-var.

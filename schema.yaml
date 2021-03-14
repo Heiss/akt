@@ -1,30 +1,45 @@
-public_url: http://akt.local
+public_url: http://akt.local # redirect_url will be derived from this
 services:
   - servicename: zenodo
     client_id: ABC
     client_secret: XYZ
-    openapi: http://zenodo.org/openapi
     api_url: http://zenodo.org/api
     authenticate_url: http://zenodo.org/oauth/auth
     refresh_url: http://zenodo.org/oauth/token
+    response_type: code
+    # optional, will be used to validate requests / responses, when there is no jsonschema
+    openapi: http://zenodo.org/openapi
   - servicename: openscienceframework
     client_id: AABC
     client_secret: XXYZ
     api_url: http://osf.org/api/v3
     authenticate_url: http://osf.org/oauth/authorize
     refresh_url: http://osf.org/oauth/token
+    response_type: code
+    # if scope available in oauth / oidc and needed to be set for datapoints to get access
     scope:
       - users
       - projects
+  - servicename: reva
+    # add http-to-grpc gateway with streaming support
+    # https://github.com/grpc-ecosystem/grpc-gateway
+    # https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/grpc_json_transcoder_filter
+    # https://medium.com/@ErrInDam/json-http-transcoding-to-grpc-using-envoy-934ffe343983
+    # https://cloud.google.com/endpoints/docs/grpc/transcoding
+    protocol: grpc
+    # to change it properly in datapoints
+    protobufs: http://github.org/reva/protobufs
 datapoints:
-  - name: zenodo
+  - service: zenodo
     endpoints:
       - endpoint: /depositions
-        name: listDepositions
+        name: getDepoEP
         field: [data, depositions]
+        # no schema defined, so it will be checked, if there is an openapi spec.
       - endpoint: /depositions/<[idDepo]>
         name: setDeposition
         method: PUT
+        stream: true
         schema: >
           {
             "$schema": "http://json-schema.org/schema#",
@@ -48,6 +63,7 @@ datapoints:
               }
             }
           }
+        # data will not be checked against schema, because schema only validates against responses, not requests
         data: >
           {
             "id": <[idZenodo]>,
@@ -56,9 +72,10 @@ datapoints:
               "description": "<[description]>"
             }
           }
-  - name: openscienceframework
+  - service: openscienceframework
     endpoints:
       - endpoints: /projects
+        name: getProjEP
         fields:
           - name: listProjects
             field: [projects]
@@ -118,18 +135,26 @@ datapoints:
           }
 endpoints:
   - endpoint: /list
-    merge:
-      - datapoints:
+    datapoints:
+      - getDepoEP
+      - getProjEP
+    merge: # returns a list with the given fields. If fields are objects use a simple append. If fields are lists, respect algorithm.
+      # fields does not have to be equal
+      # schema (jsonschema) can be specified, then it will ignore elements, which does not fit.
+      - fields:
+          - getDepoEP # derived from datapoint name, because only one field specified above
           - listProjects
-          - listDepositions
         name: lists
+        # options: append (second list after the first list), alternate (first element from first list, second from second list, third from first list,...), sort (need a key value to for sort)
+        algorithm: append
     schema: >
       {
         userDepositions: <[lists]>
       }
   - endpoint: /list
+    name: updateProjects # does not need, but it makes it easier to handle workflows
     method: PUT
-    connect:
+    datapoints:
       - setDeposition
       - setProject
     schema: >
@@ -168,3 +193,18 @@ endpoints:
         field: [data, title]
       - name: description
         field: [data, "description"]
+workflows: # enables custom flows without the need of an extra microservice. use response data from one endpoint as input data for another endpoint
+  - name: uploadFiles # for easier access in other workflows
+    endpoint: /triggerSync # new endpoint to trigger this flow
+    method: POST
+    flow: # one step after another. TODO: think about a non cyclic directed graph
+      - endpoint: /list # first trigger this endpoint to get data. Method defaults to GET
+      - endpoint: /list # use data of previous endpoint and send it as data to this endpoint with the configured method
+        method: PUT
+  - name: exampleWorkflow
+    endpoint: /testTrigger
+    flow:
+      - name: uploadFiles
+      #- endpoint: /list
+      #  method: PUT
+      - name: updateProjects
