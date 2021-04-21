@@ -1,4 +1,5 @@
 public_url: http://akt.local # redirect_url will be derived from this
+version: 1.1
 services:
   - servicename: zenodo
     client_id: ABC
@@ -21,7 +22,7 @@ services:
       - users
       - projects
   - servicename: reva
-    # add http-to-grpc gateway with streaming support
+    # TODO: add http-to-grpc gateway with streaming support
     # https://github.com/grpc-ecosystem/grpc-gateway
     # https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/grpc_json_transcoder_filter
     # https://medium.com/@ErrInDam/json-http-transcoding-to-grpc-using-envoy-934ffe343983
@@ -29,12 +30,21 @@ services:
     protocol: grpc
     # to change it properly in datapoints
     protobufs: http://github.org/reva/protobufs
+  # provide an url for an external schema, so we can copy configurations
+  - url: http://serviceapi.com/v0.1/schema.yml
+    service: serviceapi # lookup this servicename in provided yml-file
+    servicename: service # optional, rename the service for avoiding name collision
 datapoints:
+  - service: service
+    endpoints: # only import this endpoints from provided yml-file
+      - endpoint: /api
   - service: zenodo
     endpoints:
       - endpoint: /depositions
         name: getDepoEP
         field: [data, depositions]
+        # cache the response, structure: "([0-9]+)([a-zA-Z]+)"; e.g. 24h 35mi 1mo 2y 60s 3d
+        cache: 24h
         # no schema defined, so it will be checked, if there is an openapi spec.
       - endpoint: /depositions/<[idDepo]>
         name: setDeposition
@@ -138,7 +148,7 @@ endpoints:
     datapoints:
       - getDepoEP
       - getProjEP
-    merge: # returns a list with the given fields. If fields are objects use a simple append. If fields are lists, respect algorithm.
+    merge: # returns a list with the given fields. If fields are objects use a simple append, respect update setting. If fields are lists, respect algorithm.
       # fields does not have to be equal
       # schema (jsonschema) can be specified, then it will ignore elements, which does not fit.
       - fields:
@@ -146,7 +156,12 @@ endpoints:
           - listProjects
         name: lists
         # options: append (second list after the first list), alternate (first element from first list, second from second list, third from first list,...), sort (need a key value to for sort)
-        algorithm: append
+        # default: append
+        algorithm: sort
+        algorithm_key: key
+        # options: override (overrides key, when already exists), skip (the first value will be hold), rename (append the index to the key-name like "key1", "key2"... )
+        # default: skip
+        update: override
     schema: >
       {
         userDepositions: <[lists]>
@@ -196,8 +211,9 @@ endpoints:
 workflows: # enables custom flows without the need of an extra microservice. use response data from one endpoint as input data for another endpoint
   - name: uploadFiles # for easier access in other workflows
     endpoint: /triggerSync # new endpoint to trigger this flow
-    method: POST
-    flow: # one step after another. TODO: think about a non cyclic directed graph
+    method: POST # defaults to GET
+    # TODO: think about a non cyclic directed graph
+    flow: # one step after another. 
       - endpoint: /list # first trigger this endpoint to get data. Method defaults to GET
       - endpoint: /list # use data of previous endpoint and send it as data to this endpoint with the configured method
         method: PUT
