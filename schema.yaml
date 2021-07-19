@@ -38,6 +38,7 @@ datapoints:
   - service: service
     endpoints: # only import this endpoints from provided yml-file
       - endpoint: /api
+        from: zenodo # optional: from which service, /api should be looked up. If not provided, will be looked up through all provided services and select first appearance
   - service: zenodo
     endpoints:
       - endpoint: /depositions
