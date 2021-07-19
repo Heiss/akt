@@ -2,6 +2,7 @@ public_url: http://akt.local # redirect_url will be derived from this
 version: 1.1
 services:
   - servicename: zenodo
+    protocol: oauth2 # optional, defaults: oauth2, options: [oauth2, grpc, ... (more to come)]
     client_id: ABC
     client_secret: XYZ
     api_url: http://zenodo.org/api
